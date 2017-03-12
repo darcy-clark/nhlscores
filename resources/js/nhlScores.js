@@ -18,4 +18,10 @@ var nhlScoreRequest = {
 
 var nhlScores = new initScores(nhlScoreRequest);
 
-console.log(nhlScores.scores.scoreboard.gameScore.length);
+for(var count = 0; count < nhlScores.scores.scoreboard.gameScore.length; count++) {
+    nhlScores.displayScores.push(document.createElement("div"));
+    nhlScores.displayScores[count].id = 'game' + count;
+    nhlScores.scoreDiv.insertBefore(nhlScores.displayScores[count], null);
+}
+
+//console.log(nhlScores.scores.scoreboard.gameScore.length);
