@@ -1,5 +1,5 @@
 /**
- * Created by AHA-Admin on 3/12/2017.
+ * Created by Darcy Clark on 3/12/2017.
  */
 
 var nhlScoreRequest = {
@@ -18,10 +18,4 @@ var nhlScoreRequest = {
 
 var nhlScores = new initScores(nhlScoreRequest);
 
-for(var count = 0; count < nhlScores.scores.scoreboard.gameScore.length; count++) {
-    nhlScores.displayScores.push(document.createElement("div"));
-    nhlScores.displayScores[count].id = 'game' + count;
-    nhlScores.scoreDiv.insertBefore(nhlScores.displayScores[count], null);
-}
-
-//console.log(nhlScores.scores.scoreboard.gameScore.length);
+nhlScores._loadScores();

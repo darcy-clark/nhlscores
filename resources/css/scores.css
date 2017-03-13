@@ -1,0 +1,12 @@
+html, body {
+    height: 100%;
+}
+
+.scorebox {
+    height: 100px;
+    width: 200px;
+    background-color: #f2f2f2;
+    margin: 5px;
+    border: 1px solid black;
+    border-radius: 5px;
+}
