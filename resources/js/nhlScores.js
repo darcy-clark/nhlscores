@@ -5,8 +5,13 @@
 var date = new dateSetter();
 
 function generateNHL(increment) {
-    if(increment === 1) {
-        date.incrementDate();
+    switch(increment) {
+        case -1:
+            date.decrementDate();
+            break;
+        case 1:
+            date.incrementDate();
+            break;
     }
     var nhlDataURL = 'https://www.mysportsfeeds.com/api/feed/pull/nhl/current/scoreboard.json?fordate=' + date.writeYYYYMMDD() + '&force=true'
     var nhlScores = new initScores(nhlDataURL);

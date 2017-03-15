@@ -37,22 +37,23 @@ initScores.prototype._displayScores = function () {
         var scoreboxDiv = document.createElement('div');
         scoreboxDiv.id = 'game' + count;
         scoreboxDiv.className = 'scorebox';
-        scoreDiv.insertBefore(scoreboxDiv, null);
+        scoreDiv.appendChild(scoreboxDiv);
 
         console.log(scoreboxDiv);
 
-        var homeTeamP = document.createElement('p');
-        homeTeamP.className = 'homeTeam';
-        scoreboxDiv.appendChild(homeTeamP);
-        var homeTeamText = document.createTextNode(this.scores.scoreboard.gameScore[count].game.homeTeam.City);
-        homeTeamP.appendChild(homeTeamText);
-
-        var awayTeamP = document.createElement('p');
-        awayTeamP.className = 'awayTeam';
-        scoreboxDiv.appendChild(awayTeamP);
-        var awayTeamText = document.createTextNode(this.scores.scoreboard.gameScore[count].game.awayTeam.City);
-        awayTeamP.appendChild(awayTeamText);
+        this._createPs('homeTeam', this.scores.scoreboard.gameScore[count].game.homeTeam.City, scoreboxDiv);
+        this._createPs('awayTeam', this.scores.scoreboard.gameScore[count].game.awayTeam.City, scoreboxDiv);
+        this._createPs('homeTeam score', this.scores.scoreboard.gameScore[count].homeScore, scoreboxDiv);
+        this._createPs('awayTeam score', this.scores.scoreboard.gameScore[count].awayScore, scoreboxDiv);
     }
+};
+
+initScores.prototype._createPs = function (htmlClass, property, miniDiv) {
+    var scoreP = document.createElement('p');
+    scoreP.className = htmlClass;
+    miniDiv.appendChild(scoreP);
+    var scoreText = document.createTextNode(property);
+    scoreP.appendChild(scoreText);
 };
 
 function dateSetter() {
@@ -63,6 +64,10 @@ function dateSetter() {
 
     function daysInMonth() {
         return new Date(year, month, 0).getDate();
+    }
+
+    function daysInLastMonth() {
+        return new Date(year, month - 1, 0).getDate();
     }
 
     this.writeYYYYMMDD = function () {
@@ -91,4 +96,18 @@ function dateSetter() {
         else
             day++;
     };
+
+    this.decrementDate = function () {
+        if(month === 1 && day === 1) {
+            day = 31;
+            month = 12;
+            year--;
+        }
+        else if(day === 1) {
+            day = daysInLastMonth();
+            month--;
+        }
+        else
+            day--;
+    }
 }

@@ -4,12 +4,9 @@ html, body {
 
 .scorebox {
     height: 100px;
-    width: 200px;
     background-color: #f2f2f2;
-    margin: 5px;
     border: 1px solid black;
     border-radius: 5px;
-    position: relative;
 }
 
 .homeTeam {
@@ -18,9 +15,24 @@ html, body {
     position: absolute;
 }
 
+.score {
+    right: 0;
+}
+
 .awayTeam {
     margin: 20px;
     margin-bottom: 15px;
     position: absolute;
-    bottom: 0px;
+    bottom: 0;
+}
+
+#increment {
+    position: absolute;
+    right: 0;
+}
+
+#time_step, .scorebox {
+    width: 200px;
+    margin: 5px;
+    position: relative;
 }
