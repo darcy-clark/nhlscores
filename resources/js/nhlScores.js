@@ -2,20 +2,16 @@
  * Created by Darcy Clark on 3/12/2017.
  */
 
-var nhlScoreRequest = {
-    type: 'GET',
-    url: 'https://www.mysportsfeeds.com/api/feed/pull/nhl/current/scoreboard.json?fordate=20170312&force=true',
-    dataType: 'json',
-    async: false,
-    headers:{
-        "Authorization": "Basic " + btoa("cepiolot" + ":" + "jerichoman")
-    },
-    data: '"comment"',
-    success: function (){
-        console.log('Data Received');
+var date = new dateSetter();
+
+function generateNHL(increment) {
+    if(increment === 1) {
+        date.incrementDate();
     }
-};
+    var nhlDataURL = 'https://www.mysportsfeeds.com/api/feed/pull/nhl/current/scoreboard.json?fordate=' + date.writeYYYYMMDD() + '&force=true'
+    var nhlScores = new initScores(nhlDataURL);
+    nhlScores._loadScores();
+    nhlScores._displayScores();
+}
 
-var nhlScores = new initScores(nhlScoreRequest);
-
-nhlScores._loadScores();
+generateNHL(0);
