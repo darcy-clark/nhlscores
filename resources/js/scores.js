@@ -2,38 +2,62 @@
  * Created by Darcy Clark on 3/9/2017.
  */
 
-function initScores(dataURL) {
+//This function initializes the AJAX request parameters with the proper date
+function initScores() {
+    var passThis = this;
+    var scoresArray = [];
+    //this function may not be necessary if the object reinitializes
+    this.resetScoresArray = function () {
+        scoresArray = [];
+        return scoresArray;
+    };
+    this.getScoresArray = function () {
+        return scoresArray;
+    }
+
+    var indexMarker = 0;
+    this.setIndexMarker = function (newIndexMarker) {
+        indexMarker = newIndexMarker;
+        return indexMarker;
+    };
+    this.getIndexMarker = function () {
+        return indexMarker;
+    };
+    document.getElementById('increment').addEventListener('click', function () {
+        passThis._pushDisplay(1);
+    });
+    document.getElementById('decrement').addEventListener('click', function () {
+        passThis._pushDisplay(-1);
+    });
+}
+
+initScores.prototype._loadScores = function (dataURL, day) { //day should likely by in display, not load
     var scoreRequest = {
         type: 'GET',
         dataType: 'json',
         async: false,
+        url: dataURL,
         headers:{
             "Authorization": "Basic " + btoa("cepiolot" + ":" + "jerichoman")
         },
         data: '"comment"',
-        success: function (){
-            console.log('Data Received');
-        }
+        // success: function (){
+        //     console.log('Data Received');
+        // }
     };
-    scoreRequest.url = dataURL;
 
-    this.getScoreRequest = function () {
-        return scoreRequest;
-    };
-}
-
-initScores.prototype._loadScores = function () {
-    var scoreRequest = this.getScoreRequest();
     var scoresJSON = $.ajax(scoreRequest);
-    this.scores = JSON.parse(scoresJSON.responseText);
-    //var scoreDiv = document.getElementById('scores');
-    console.log(this.scores.scoreboard.gameScore.length);
+    var scores = JSON.parse(scoresJSON.responseText);
+    var scoresArray = this.getScoresArray();
+    scoresArray.push(scores);
 };
 
-initScores.prototype._displayScores = function () {
+initScores.prototype._displayScores = function (index) {
     var scoreDiv = document.getElementById('scores');
+    var scoresArray = this.getScoresArray();
+    console.log(scoresArray[0]);
     scoreDiv.innerHTML = '';
-    for(var count = 0; count < this.scores.scoreboard.gameScore.length; count++) {
+    for(var count = 0; count < scoresArray[index].scoreboard.gameScore.length; count++) {
         var scoreboxDiv = document.createElement('div');
         scoreboxDiv.id = 'game' + count;
         scoreboxDiv.className = 'scorebox';
@@ -41,10 +65,10 @@ initScores.prototype._displayScores = function () {
 
         console.log(scoreboxDiv);
 
-        this._createPs('homeTeam', this.scores.scoreboard.gameScore[count].game.homeTeam.City, scoreboxDiv);
-        this._createPs('awayTeam', this.scores.scoreboard.gameScore[count].game.awayTeam.City, scoreboxDiv);
-        this._createPs('homeTeam score', this.scores.scoreboard.gameScore[count].homeScore, scoreboxDiv);
-        this._createPs('awayTeam score', this.scores.scoreboard.gameScore[count].awayScore, scoreboxDiv);
+        this._createPs('homeTeam', scoresArray[index].scoreboard.gameScore[count].game.homeTeam.City, scoreboxDiv);
+        this._createPs('awayTeam', scoresArray[index].scoreboard.gameScore[count].game.awayTeam.City, scoreboxDiv);
+        this._createPs('homeTeam score', scoresArray[index].scoreboard.gameScore[count].homeScore, scoreboxDiv);
+        this._createPs('awayTeam score', scoresArray[index].scoreboard.gameScore[count].awayScore, scoreboxDiv);
     }
 };
 
@@ -56,15 +80,35 @@ initScores.prototype._createPs = function (htmlClass, property, miniDiv) {
     scoreP.appendChild(scoreText);
 };
 
+initScores.prototype._pushDisplay = function (direction) {
+    var scoresArray = this.getScoresArray();
+    var currentIndex = this.getIndexMarker();
+
+    if(direction === 1)
+        currentIndex = this.setIndexMarker(currentIndex + 1);
+    else
+        currentIndex = this.setIndexMarker(currentIndex - 1);
+    if(this.getIndexMarker() === scoresArray.length) {
+
+    }
+    else {
+
+    }
+    this._displayScores(currentIndex);
+};
+
 function dateSetter() {
     var date = new Date();
+    //date.setDate(date.getDate() - 5);
+
     var year = date.getFullYear();
     var month = date.getMonth() + 1;
     var day = date.getDate();
+    var today = date.getDate();
 
-    function daysInMonth() {
+    this.daysInMonth = function () {
         return new Date(year, month, 0).getDate();
-    }
+    };
 
     function daysInLastMonth() {
         return new Date(year, month - 1, 0).getDate();
@@ -84,12 +128,12 @@ function dateSetter() {
     };
 
     this.incrementDate = function () {
-        if(month === 12 && daysInMonth() === day) {
+        if(month === 12 && this.daysInMonth() === day) {
             day = 1;
             month = 1;
             year++;
         }
-        else if(daysInMonth() === day) {
+        else if(this.daysInMonth() === day) {
             day = 1;
             month++;
         }
@@ -109,5 +153,13 @@ function dateSetter() {
         }
         else
             day--;
+    }
+
+    this.getToday = function () {
+        return today;
+    }
+
+    this.getTheDay = function () {
+        return day;
     }
 }
