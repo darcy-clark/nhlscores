@@ -4,8 +4,13 @@
 
 //This function initializes the AJAX request parameters with the proper date
 function initScores() {
+    //passThis is necessary to use 'this' in document functions, otherwise 'this' is the not initScore's 'this'
     var passThis = this;
     var scoresArray = [];
+    var indexMarker = 0;
+    this.date = new dateSetter();
+
+    //GETTERS AND SETTERS
     //this function may not be necessary if the object reinitializes
     this.resetScoresArray = function () {
         scoresArray = [];
@@ -13,9 +18,8 @@ function initScores() {
     };
     this.getScoresArray = function () {
         return scoresArray;
-    }
+    };
 
-    var indexMarker = 0;
     this.setIndexMarker = function (newIndexMarker) {
         indexMarker = newIndexMarker;
         return indexMarker;
@@ -23,6 +27,8 @@ function initScores() {
     this.getIndexMarker = function () {
         return indexMarker;
     };
+
+    //HTML
     document.getElementById('increment').addEventListener('click', function () {
         passThis._pushDisplay(1);
     });
@@ -31,7 +37,24 @@ function initScores() {
     });
 }
 
-initScores.prototype._loadScores = function (dataURL, day) { //day should likely by in display, not load
+//loading data is an object containing both parts of the JSON's url, position of the array, and amount to add
+initScores.prototype._generateScoreBar = function (loadingData) {
+    for(var count = 0; count < loadingData.amount; count++) {
+        var nhlDataURL = loadingData.urlPartOne + this.date.writeYYYYMMDD() + loadingData.urlPartTwo;
+        //position is whether we're adding dates to the beginning of the array or the end; back in time or forward
+        this._loadScores(nhlDataURL, loadingData.position);
+        console.log(this.date.writeYYYYMMDD());
+
+        //when we get to today's day, set the initial display index to today
+        if(this.date.getTheDay() === this.date.getToday()) {
+            this.setIndexMarker(count);
+        }
+        this.date.setLatest();
+        this.date.incrementDate();
+    }
+};
+
+initScores.prototype._loadScores = function (dataURL, position) { //day should likely by in display, not load
     var scoreRequest = {
         type: 'GET',
         dataType: 'json',
@@ -49,7 +72,10 @@ initScores.prototype._loadScores = function (dataURL, day) { //day should likely
     var scoresJSON = $.ajax(scoreRequest);
     var scores = JSON.parse(scoresJSON.responseText);
     var scoresArray = this.getScoresArray();
-    scoresArray.push(scores);
+    if(position === 'front')
+        scoresArray.push(scores);
+    else
+        scoresArray.unshift(scores);
 };
 
 initScores.prototype._displayScores = function (index) {
@@ -114,8 +140,9 @@ function dateSetter() {
         return new Date(year, month - 1, 0).getDate();
     }
 
+    var YYYYMMDD;
     this.writeYYYYMMDD = function () {
-        var YYYYMMDD = String(year);
+        YYYYMMDD = String(year);
         if(month < 10)
             YYYYMMDD += '0' + month;
         else
@@ -153,13 +180,25 @@ function dateSetter() {
         }
         else
             day--;
-    }
+    };
 
     this.getToday = function () {
         return today;
-    }
+    };
 
     this.getTheDay = function () {
         return day;
+    };
+
+    var latestDate;
+    var earliestDate;
+
+    this.setLatest = function () {
+          latestDate = YYYYMMDD;
+          return latestDate;
+    };
+    this.setEarliest = function () {
+        earliestDate = YYYYMMDD;
+        return earliestDate;
     }
 }
