@@ -3,11 +3,12 @@
  */
 
 //This function initializes the AJAX request parameters with the proper date
-function initScores() {
+function initScores(urlParts) {
     //passThis is necessary to use 'this' in document functions, otherwise 'this' is the not initScore's 'this'
     var passThis = this;
     var scoresArray = [];
-    var indexMarker = 0;
+    var indexMarker = 0;            //indexMarker keeps tracks of the scoreArray index that _displayScores() must display
+    var daysToAdd = 3;
     this.date = new dateSetter();
 
     //GETTERS AND SETTERS
@@ -20,12 +21,20 @@ function initScores() {
         return scoresArray;
     };
 
+    this.getURL = function () {
+        return urlParts;
+    };
+
     this.setIndexMarker = function (newIndexMarker) {
         indexMarker = newIndexMarker;
         return indexMarker;
     };
     this.getIndexMarker = function () {
         return indexMarker;
+    };
+
+    this.getDaysToAdd = function () {
+        return daysToAdd;
     };
 
     //HTML
@@ -40,7 +49,8 @@ function initScores() {
 //loading data is an object containing both parts of the JSON's url, position of the array, and amount to add
 initScores.prototype._generateScoreBar = function (loadingData) {
     for(var count = 0; count < loadingData.amount; count++) {
-        var nhlDataURL = loadingData.urlPartOne + this.date.writeYYYYMMDD() + loadingData.urlPartTwo;
+        var urlParts = this.getURL();
+        var nhlDataURL = urlParts.partOne + this.date.writeYYYYMMDD() + urlParts.partTwo;
         //position is whether we're adding dates to the beginning of the array or the end; back in time or forward
         this._loadScores(nhlDataURL, loadingData.position);
         console.log(this.date.writeYYYYMMDD());
@@ -48,13 +58,22 @@ initScores.prototype._generateScoreBar = function (loadingData) {
         //when we get to today's day, set the initial display index to today
         if(this.date.getTheDay() === this.date.getToday()) {
             this.setIndexMarker(count);
+            this._displayScores(this.getIndexMarker());
         }
-        this.date.setLatest();
-        this.date.incrementDate();
+
+        //if we're adding to the end of the array, up the date and set that as the latest date we have (and vice-versa)
+        if(loadingData.position === 'front') {
+            this.date.incrementDate();
+            this.date.setLatest();
+        }
+        else {
+            this.date.decrementDate();
+            this.date.setEarliest();
+        }
     }
 };
 
-initScores.prototype._loadScores = function (dataURL, position) { //day should likely by in display, not load
+initScores.prototype._loadScores = function (dataURL, position) {
     var scoreRequest = {
         type: 'GET',
         dataType: 'json',
@@ -63,10 +82,7 @@ initScores.prototype._loadScores = function (dataURL, position) { //day should l
         headers:{
             "Authorization": "Basic " + btoa("cepiolot" + ":" + "jerichoman")
         },
-        data: '"comment"',
-        // success: function (){
-        //     console.log('Data Received');
-        // }
+        data: '"comment"'
     };
 
     var scoresJSON = $.ajax(scoreRequest);
@@ -81,15 +97,14 @@ initScores.prototype._loadScores = function (dataURL, position) { //day should l
 initScores.prototype._displayScores = function (index) {
     var scoreDiv = document.getElementById('scores');
     var scoresArray = this.getScoresArray();
-    console.log(scoresArray[0]);
     scoreDiv.innerHTML = '';
+
+    //makes as many scorebox divs as there are games that night
     for(var count = 0; count < scoresArray[index].scoreboard.gameScore.length; count++) {
         var scoreboxDiv = document.createElement('div');
         scoreboxDiv.id = 'game' + count;
         scoreboxDiv.className = 'scorebox';
         scoreDiv.appendChild(scoreboxDiv);
-
-        console.log(scoreboxDiv);
 
         this._createPs('homeTeam', scoresArray[index].scoreboard.gameScore[count].game.homeTeam.City, scoreboxDiv);
         this._createPs('awayTeam', scoresArray[index].scoreboard.gameScore[count].game.awayTeam.City, scoreboxDiv);
@@ -109,28 +124,53 @@ initScores.prototype._createPs = function (htmlClass, property, miniDiv) {
 initScores.prototype._pushDisplay = function (direction) {
     var scoresArray = this.getScoresArray();
     var currentIndex = this.getIndexMarker();
+    var daysToAdd = this.getDaysToAdd();
 
     if(direction === 1)
         currentIndex = this.setIndexMarker(currentIndex + 1);
     else
         currentIndex = this.setIndexMarker(currentIndex - 1);
+
+    // when we reach the end of the array indexing the stored days' scores, make an AJAX request for more days
     if(this.getIndexMarker() === scoresArray.length) {
-
+        //jump to the latest date that must be displayed, in case the user went back in time, generated scores from
+        //back then, and then went forward to generate more scores in the future
+        var latestDate = this.date.getLatest();
+        this.date.setTheDate(latestDate);
+        this._generateScoreBar({
+            position: 'front',
+            amount: daysToAdd
+        });
     }
-    else {
-
+    else if(this.getIndexMarker() === -1) {
+        var earliestDate = this.date.getEarliest();
+        this.date.setTheDate(earliestDate);
+        this._generateScoreBar({
+            position: 'back',
+            amount: daysToAdd
+        });
+        currentIndex = this.setIndexMarker(daysToAdd - 1);  //index is -1, must be set to the proper score date
     }
     this._displayScores(currentIndex);
 };
 
 function dateSetter() {
     var date = new Date();
-    //date.setDate(date.getDate() - 5);
 
     var year = date.getFullYear();
     var month = date.getMonth() + 1;
     var day = date.getDate();
-    var today = date.getDate();
+
+    //remains static as the current date, while the other year/month/day values change as they are manipulated
+    var today = {
+        day: date.getDate(),
+        month: date.getMonth() + 1,
+        year: date.getFullYear()
+    };
+
+    //one day after the latest date we are able to display, and vice-versa for earliestDate
+    var latestDate = {};
+    var earliestDate= {};
 
     this.daysInMonth = function () {
         return new Date(year, month, 0).getDate();
@@ -140,9 +180,9 @@ function dateSetter() {
         return new Date(year, month - 1, 0).getDate();
     }
 
-    var YYYYMMDD;
+    //writes the date in the proper format for MySportsFeeds to handle in the AJAX request
     this.writeYYYYMMDD = function () {
-        YYYYMMDD = String(year);
+        var YYYYMMDD = String(year);
         if(month < 10)
             YYYYMMDD += '0' + month;
         else
@@ -182,23 +222,49 @@ function dateSetter() {
             day--;
     };
 
+    this.setRewind = function (daysRewind) {
+        //rewind must go back one more than the daysRewind counter in order to setEarliest() as a day before the
+        // earliest date displayable
+        for(var count = 0; count < daysRewind + 1; count++)
+            this.decrementDate();
+        this.setEarliest();     //set the earliest date after the full rewind
+        this.incrementDate();
+    };
+
+    //GETTERS AND SETTERS
     this.getToday = function () {
-        return today;
+        return String(today.day) + String(today.month) + String(today.year);
     };
 
     this.getTheDay = function () {
-        return day;
+        return String(day) + String(month) + String(year);
     };
 
-    var latestDate;
-    var earliestDate;
+    this.getLatest = function () {
+        return latestDate;
+    };
+
+    this.getEarliest = function () {
+        return earliestDate;
+    };
 
     this.setLatest = function () {
-          latestDate = YYYYMMDD;
+          latestDate.day = day;
+          latestDate.month = month;
+          latestDate.year = year;
           return latestDate;
     };
+
     this.setEarliest = function () {
-        earliestDate = YYYYMMDD;
+        earliestDate.day = day;
+        earliestDate.month = month;
+        earliestDate.year = year;
         return earliestDate;
-    }
+    };
+
+    this.setTheDate = function (newDate) {
+        day = newDate.day;
+        month = newDate.month;
+        year = newDate.year;
+    };
 }
