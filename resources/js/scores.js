@@ -87,6 +87,7 @@ initScores.prototype._loadScores = function (dataURL, position) {
 
     var scoresJSON = $.ajax(scoreRequest);
     var scores = JSON.parse(scoresJSON.responseText);
+    scores.date = this.date.getTheDate();
     var scoresArray = this.getScoresArray();
     if(position === 'front')
         scoresArray.push(scores);
@@ -111,6 +112,78 @@ initScores.prototype._displayScores = function (index) {
         this._createPs('homeTeam score', scoresArray[index].scoreboard.gameScore[count].homeScore, scoreboxDiv);
         this._createPs('awayTeam score', scoresArray[index].scoreboard.gameScore[count].awayScore, scoreboxDiv);
     }
+
+    //display the date above the scores for the user
+    console.log(scoresArray[index].date.month);
+    switch(scoresArray[index].date.weekday) {
+        case 0:
+            document.getElementById('score_date').innerHTML = 'Sunday';
+            break;
+        case 1:
+            document.getElementById('score_date').innerHTML = 'Monday';
+            break;
+        case 2:
+            document.getElementById('score_date').innerHTML = 'Tuesday';
+            break;
+        case 3:
+            document.getElementById('score_date').innerHTML = 'Wednesday';
+            break;
+        case 4:
+            document.getElementById('score_date').innerHTML = 'Thursday';
+            break;
+        case 5:
+            document.getElementById('score_date').innerHTML = 'Friday';
+            break;
+        case 6:
+            document.getElementById('score_date').innerHTML = 'Saturday';
+            break;
+        default:
+            document.getElementById('score_date').innerHTML = 'Error';
+            break;
+    }
+    document.getElementById('score_date').innerHTML += ', <br>';
+    switch(scoresArray[index].date.month) {
+        case 1:
+            document.getElementById('score_date').innerHTML += 'Jan.';
+            break;
+        case 2:
+            document.getElementById('score_date').innerHTML += 'Feb.';
+            break;
+        case 3:
+            document.getElementById('score_date').innerHTML += 'March';
+            break;
+        case 4:
+            document.getElementById('score_date').innerHTML += 'April';
+            break;
+        case 5:
+            document.getElementById('score_date').innerHTML += 'May';
+            break;
+        case 6:
+            document.getElementById('score_date').innerHTML += 'June';
+            break;
+        case 7:
+            document.getElementById('score_date').innerHTML += 'July';
+            break;
+        case 8:
+            document.getElementById('score_date').innerHTML += 'Aug.';
+            break;
+        case 9:
+            document.getElementById('score_date').innerHTML += 'Sept.';
+            break;
+        case 10:
+            document.getElementById('score_date').innerHTML += 'Oct.';
+            break;
+        case 11:
+            document.getElementById('score_date').innerHTML += 'Nov.';
+            break;
+        case 12:
+            document.getElementById('score_date').innerHTML += 'Dec.';
+            break;
+        default:
+            document.getElementById('score_date').innerHTML = 'Error';
+            break;
+    }
+    document.getElementById('score_date').innerHTML += ' ' + scoresArray[index].date.day + ', ' + scoresArray[index].date.year;
 };
 
 initScores.prototype._createPs = function (htmlClass, property, miniDiv) {
@@ -160,6 +233,7 @@ function dateSetter() {
     var year = date.getFullYear();
     var month = date.getMonth() + 1;
     var day = date.getDate();
+    var dayOfWeek = date.getDay();
 
     //remains static as the current date, while the other year/month/day values change as they are manipulated
     var today = {
@@ -206,6 +280,15 @@ function dateSetter() {
         }
         else
             day++;
+
+        switch(dayOfWeek) {
+            case 6:
+                dayOfWeek = 0;
+                break;
+            default:
+                dayOfWeek++;
+                break;
+        }
     };
 
     this.decrementDate = function () {
@@ -220,6 +303,15 @@ function dateSetter() {
         }
         else
             day--;
+
+        switch(dayOfWeek) {
+            case 0:
+                dayOfWeek = 6;
+                break;
+            default:
+                dayOfWeek--;
+                break;
+        }
     };
 
     this.setRewind = function (daysRewind) {
@@ -246,6 +338,20 @@ function dateSetter() {
 
     this.getEarliest = function () {
         return earliestDate;
+    };
+
+    this.getDayOfWeek = function () {
+        return dayOfWeek;
+    };
+
+    this.getTheDate = function () {
+        var dateObject = {
+            day: day,
+            month: month,
+            year: year,
+            weekday: dayOfWeek
+        };
+        return dateObject;
     };
 
     this.setLatest = function () {

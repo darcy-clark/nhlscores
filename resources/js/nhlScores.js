@@ -15,9 +15,3 @@ nhlScores._generateScoreBar({
     position: 'front',
     amount: 7
 });
-
-//This block displays today's scores when the page is first loaded
-// var indexToday = nhlScores.getIndexMarker();
-// nhlScores._displayScores(indexToday);
-
-console.log(nhlScores.date.getLatest());
